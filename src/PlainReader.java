@@ -4,6 +4,8 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.List;
+
+import Var.Tuple;
 public class PlainReader extends Operator {
 	BufferedReader reader;
 	String path;
@@ -11,8 +13,8 @@ public class PlainReader extends Operator {
 		this.reader = new BufferedReader(new FileReader(path));
 		this.Schema = Schema;
 	}
-	public List<String> getNextTuple() throws IOException{
-		return Arrays.asList(this.reader.readLine().split(","));
+	public Tuple getNextTuple() throws IOException{
+		return new Tuple(Arrays.asList(this.reader.readLine().split(",")));
 	}
 	public void reset() throws FileNotFoundException {
 		this.reader = new BufferedReader(new FileReader(this.path));

@@ -3,6 +3,8 @@ import java.io.IOException;
 import java.util.Arrays;
 import java.util.List;
 
+import Var.Tuple;
+import Visitors.SelectionExpressionVisitor;
 import net.sf.jsqlparser.expression.Expression;
 import net.sf.jsqlparser.statement.select.SelectItem;
 
@@ -10,7 +12,7 @@ public class Selector extends Operator{
 	Operator source;
 	Expression where_clause;
 	int[] ItemPos;
-	
+	SelectionExpressionVisitor visitor = new SelectionExpressionVisitor();
 	public Selector(Operator source, Expression where_clause, List<SelectItem> selectitems, String alias) {
 		this.source = source;
 		this.where_clause = where_clause;
@@ -19,21 +21,22 @@ public class Selector extends Operator{
 		if (selectitems.get(0).toString() != "*") {
 			this.ItemPos = new int[selectitems.size()];
 			for (int i = 0; i < selectitems.size(); i++) {
-				Schema.add(selectitems.get(i).toString());
-				for (int j = 0; j < sourceSchema.size(); j++) {
-					if (sourceSchema.get(j) == Schema.get(i)) {
-						this.ItemPos[i] = j;
+				this.Schema.add(selectitems.get(i).toString());
+				for (int j = 1; j < sourceSchema.size(); j++) {
+					if (sourceSchema.get(j).equals(Schema.get(i+1))) {
+						ItemPos[i] = j - 1;
 					}
 				}
 			}
 		}
 		else {
-			this.ItemPos = new int[sourceSchema.size()];
-			this.Schema.addAll(sourceSchema);
+			this.ItemPos = new int[sourceSchema.size()-1];
 			for(int i = 0; i < ItemPos.length; i++) {
 				ItemPos[i] = i;
+				this.Schema.add(sourceSchema.get(i + 1));
 			}
 		}
+		visitor.set(sourceSchema);
 	}
 	
 	public Selector(Operator source, Expression where_clause, List<SelectItem> selectitems) {
@@ -41,19 +44,20 @@ public class Selector extends Operator{
 	}
 	
 
-	public List<String> getNextTuple() throws IOException{
-		List<String> result = Arrays.asList(new String[0]);
+	public Tuple getNextTuple() throws IOException{
+		Tuple result = new Tuple(Arrays.asList(new String[this.ItemPos.length]));
 		while(true) {
 			try {
-				List<String> tuple = source.getNextTuple();
+				Tuple tuple = source.getNextTuple();
 				if(tuple.size() == 0) {
 					break;
 				}
-				boolean cond = false;
-				//Conditions go here!
-				if(cond) {
-					for(int i = 0; i < this.ItemPos.length; i++)
-						result.add(tuple.get(ItemPos[i]));
+				this.visitor.set(tuple);
+				where_clause.accept(visitor);
+				if(visitor.getStatus()) {
+					for(int i = 0; i < this.ItemPos.length; i++) {
+						result.set(i, tuple.get(ItemPos[i]));
+					}
 					return result;
 				}
 					

@@ -1,12 +1,12 @@
+import Var.Tuple;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.Arrays;
-import java.util.List;
 
 
 public class Distinctor extends Operator{
 	Operator source;
-	List<String> curTuple = Arrays.asList(new String[0]);
+	Tuple curTuple;
 	public Distinctor(Operator source) {
 		this.source = source;
 		this.Schema = source.getSchema();
@@ -17,10 +17,10 @@ public class Distinctor extends Operator{
 			System.out.println("Table is empty!");
 		}
 	}
-	public List<String> getNextTuple() throws IOException{
+	public Tuple getNextTuple() throws IOException{
 		while(true) {
 			try {
-				List<String> nextTuple = this.source.getNextTuple();
+				Tuple nextTuple = this.source.getNextTuple();
 				if(nextTuple.size() == 0) {
 					break;
 				}
@@ -42,7 +42,7 @@ public class Distinctor extends Operator{
 				break;
 			}
 		}
-		return Arrays.asList(new String[0]);
+		return new Tuple(Arrays.asList(new String[0]));
 	}
 	public void reset() throws FileNotFoundException {
 		this.source.reset();

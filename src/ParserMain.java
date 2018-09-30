@@ -1,7 +1,9 @@
 import java.util.List;
+
+import Var.Tuple;
+
 import java.io.FileReader;
 import net.sf.jsqlparser.expression.Expression;
-import net.sf.jsqlparser.expression.operators.conditional.*;
 import net.sf.jsqlparser.parser.CCJSqlParser;
 import net.sf.jsqlparser.statement.Statement;
 import net.sf.jsqlparser.statement.select.FromItem;
@@ -17,14 +19,24 @@ public class ParserMain {
 		try {			
 			CCJSqlParser parser = new CCJSqlParser(new FileReader(queriesFile));
 			Statement statement;
+			SchemaTable schematable = new SchemaTable();
 			while ((statement = parser.Statement()) != null) {
 				System.out.println("Read statement: " + statement);
 				Select select = (Select) statement;
 				PlainSelect plain = (PlainSelect) select.getSelectBody();
 				List<SelectItem> selectitems = plain.getSelectItems();
-				FromItem from_clause = plain.getFromItem();
+				FromItem fromItem = plain.getFromItem();
 				List<Join> joinList = plain.getJoins(); 
 				Expression where_clause = plain.getWhere();
+				if(joinList == null) {
+					String s = fromItem.toString();
+					List<String> Schema = schematable.getSchema(s);
+					String path = schematable.getPath(s);
+					PlainReader reader = new PlainReader(path, Schema);
+					Selector selector = new Selector(reader, where_clause, selectitems);
+					Tuple t = selector.getNextTuple();
+					System.out.println(t.get());
+				}
 			}
 		} catch (Exception e) {
 			System.err.println("Exception occurred during parsing");

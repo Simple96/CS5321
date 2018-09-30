@@ -31,7 +31,7 @@ public class SchemaTable {
 		this.reader = new BufferedReader(new FileReader(tableSchemas));
 		while(true) {
 			try {
-				List<String> Schema = Arrays.asList(this.reader.readLine().split(","));
+				List<String> Schema = Arrays.asList(this.reader.readLine().split(" "));
 				String path = tablePath + File.separatorChar + Schema.get(0);
 				this.hashtable.put(Schema.get(0), new tableEntry(Schema, path));
 			}
@@ -39,5 +39,14 @@ public class SchemaTable {
 				break;
 			}
 		}
+	}
+	
+	public List<String> getSchema(String s){
+		tableEntry a = hashtable.get(s);
+		return a.getSchema();
+	}
+	
+	public String getPath(String s) {
+		return hashtable.get(s).getPath();
 	}
 }

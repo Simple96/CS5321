@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
+import Var.Tuple;
 import net.sf.jsqlparser.expression.Expression;
 import net.sf.jsqlparser.statement.select.SelectItem;
 
@@ -13,13 +14,22 @@ public class BasicJoiner extends Operator{
 	List<String> Schema1;
 	List<String> Schema2;
 	Expression on_clause;
-	Expression where_clause;
 	int Join_Type;
-	List<String> Nulltuple;
-	List<String> tuple1;
+	Tuple Nulltuple;
+	Tuple tuple1;
 	boolean matched = false;
 	int[][] ItemPos;
-	public BasicJoiner(Operator source1, Operator source2, Expression on_clause, Expression where_clause, int Join_Type, List<SelectItem> selectitems, String alias) {
+	private Tuple Dump(Tuple tuple1, Tuple tuple2) {
+		List<String> content = new ArrayList<String>();
+		for(int i = 0; i < ItemPos.length; i++) {
+			if(ItemPos[i][0] == 1)
+				content.add(tuple1.get(ItemPos[i][1]));
+			else
+				content.add(tuple2.get(ItemPos[i][1]));
+		}
+		return new Tuple(content);
+	}
+	public BasicJoiner(Operator source1, Operator source2, Expression on_clause, int Join_Type, List<SelectItem> selectitems, String alias) {
 		this.Schema.add(alias);
 		String[] Item;		
 		this.Schema1 = source1.getSchema();
@@ -29,23 +39,22 @@ public class BasicJoiner extends Operator{
 			for (int i = 0; i < selectitems.size(); i++) {
 				Item = selectitems.get(i).toString().split(".");
 				String name = Item[1];
-				for(int j = 2; j < Item.length; j++) {
-					name = name + Item[j];
-				}
-				if(Item.length > 2) 
+				if(Item.length > 2) {
+					name = name + '.' + Item[2];
 					this.Schema.add(name);
+				}
 				else
 					this.Schema.add(selectitems.get(i).toString());
 				if(Item[0] == this.Schema1.get(0)) {
-					for (int j = 0; j < this.Schema1.size(); j++) {
-						if (this.Schema1.get(j) == name) 
+					for (int j = 1; j < this.Schema1.size(); j++) {
+						if (this.Schema1.get(j).equals(name)) 
 							this.ItemPos[i][0] = 1;
 							this.ItemPos[i][1] = j;
 					}
 				}
 				else {
-					for (int j = 0; j < this.Schema2.size(); j++) {
-						if (this.Schema2.get(j) == name)
+					for (int j = 1; j < this.Schema2.size(); j++) {
+						if (this.Schema2.get(j).equals(name))
 							this.ItemPos[i][0] = 2;
 							this.ItemPos[i][1] = j;
 					}
@@ -54,7 +63,7 @@ public class BasicJoiner extends Operator{
 			}
 		}
 		else {
-			this.ItemPos = new int[this.Schema1.size()+this.Schema2.size()][2];
+			this.ItemPos = new int[this.Schema1.size()+this.Schema2.size()-2][2];
 			if(this.Schema1.get(1).toString().split(".").length < 2)
 				for(int i = 1; i < this.Schema1.size(); i++) 
 					this.Schema.add(this.Schema1.get(0) + "." + this.Schema1.get(i));
@@ -69,11 +78,10 @@ public class BasicJoiner extends Operator{
 					this.Schema.add(this.Schema2.get(i));
 			//Initialize ItemPos
 		}
-		this.Schema.addAll(source2.getSchema());
 		//0: INNER
 		//1: LEFT
 		//2: RIGHT
-		if(Join_Type != 3) {
+		if(Join_Type != 2) {
 			this.source1 = source1;
 			this.source2 = source2;
 		}
@@ -94,17 +102,17 @@ public class BasicJoiner extends Operator{
 		for(int i = 0;i < this.source2.getSchema().size();i++) {
 			nulltuple[i] = "null";
 		}
-		this.Nulltuple = Arrays.asList(nulltuple);
+		this.Nulltuple = new Tuple(Arrays.asList(nulltuple));
 
 
 	}
-	public List<String> getNextTuple() throws IOException{
-		List<String> result = Arrays.asList(new String[0]);
+	public Tuple getNextTuple() throws IOException{
+		Tuple result = new Tuple(Arrays.asList(new String[0]));
 		while(true) {
 			if(tuple1.size() == 0) {
 				break;
 			}
-			List<String> tuple2 = Arrays.asList(new String[0]);
+			Tuple tuple2 = new Tuple(Arrays.asList(new String[0]));
 			try {
 				tuple2 = this.source2.getNextTuple();
 				boolean cond = false;
@@ -112,13 +120,10 @@ public class BasicJoiner extends Operator{
 				if(cond) {
 					this.matched = true;
 					if(Join_Type != 2) {
-						result = new ArrayList<String>(this.tuple1);
-						result.addAll(tuple2);
-
+						result = Dump(tuple1, tuple2);
 					}
 					else {
-						result = new ArrayList<String>(tuple2);
-						result.addAll(this.tuple1);
+						result = Dump(tuple2, tuple1);
 					}
 					return result;
 				}
@@ -127,12 +132,10 @@ public class BasicJoiner extends Operator{
 				try {
 					if(this.matched == false) {
 						if(Join_Type == 1) {
-								result = new ArrayList<String>(tuple1);
-								result.addAll(this.Nulltuple);
+							result = Dump(tuple1, tuple2);
 						}
 						else if(Join_Type == 2) {
-							result = new ArrayList<String>(this.Nulltuple);
-							result.addAll(tuple1);
+							result = Dump(tuple2, tuple1);
 						}
 					}
 					this.source2.reset();
