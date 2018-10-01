@@ -1,3 +1,4 @@
+package Operators;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.Arrays;
@@ -45,7 +46,7 @@ public class Selector extends Operator{
 	
 
 	public Tuple getNextTuple() throws IOException{
-		Tuple result = new Tuple(Arrays.asList(new String[this.ItemPos.length]));
+		Tuple result = new Tuple(Arrays.asList(new String[0]));
 		while(true) {
 			try {
 				Tuple tuple = source.getNextTuple();
@@ -55,18 +56,18 @@ public class Selector extends Operator{
 				this.visitor.set(tuple);
 				where_clause.accept(visitor);
 				if(visitor.getStatus()) {
+					result = new Tuple(Arrays.asList(new String[this.ItemPos.length]));
 					for(int i = 0; i < this.ItemPos.length; i++) {
 						result.set(i, tuple.get(ItemPos[i]));
 					}
 					return result;
 				}
-					
 			}
 			catch(Exception e) {
 				break;
 			}
 		}
-		return result;
+		throw new IOException();
 	}
 	public void reset() throws FileNotFoundException {
 		this.source.reset();

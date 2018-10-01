@@ -1,3 +1,4 @@
+package Operators;
 import java.io.BufferedReader;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
@@ -10,6 +11,7 @@ public class PlainReader extends Operator {
 	BufferedReader reader;
 	String path;
 	public PlainReader(String path, List<String> Schema) throws IOException {
+		this.path = path;
 		this.reader = new BufferedReader(new FileReader(path));
 		this.Schema = Schema;
 	}

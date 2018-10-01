@@ -1,3 +1,4 @@
+package Operators;
 import net.sf.jsqlparser.expression.Expression;
 
 public class SmartJoiner extends Operator{
