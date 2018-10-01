@@ -71,7 +71,7 @@ public class Selector extends Operator{
 		
 		throw new IOException();
 	}
-	public void reset() throws FileNotFoundException {
+	public void reset() throws IOException {
 		this.source.reset();
 	}
 }

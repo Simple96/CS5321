@@ -1,7 +1,4 @@
 package Operators;
-import java.io.BufferedReader;
-import java.io.FileNotFoundException;
-import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -22,10 +19,13 @@ public class Sorter extends Operator{
 	    	for(int i = 0; i < orderbyItems.size(); i++) {
 	    		s = orderbyItems.get(i).getExpression().toString();
 	    		for(int j = 1; j < Schema.size(); j++) {
-	    			if(s.equals(Schema.get(j))) 
+	    			String[] sa = Schema.get(j).split("\\.");
+	    			if(s.equals(Schema.get(j)) | (sa.length > 1 & s.equals(sa[1].toString()))) {
 	    				compare_order[i] = j - 1;
+	    			}
 	    		}	    			
 	    	}
+	    	System.out.println(compare_order[0]);
 	    }
 	    public int compare(Tuple a, Tuple b) {
 	    	for(int i = 0; i < compare_order.length; i++) {
@@ -42,6 +42,7 @@ public class Sorter extends Operator{
 	
 	public Sorter(Operator source, List<OrderByElement> orderbyItems, String path) throws IOException {
 		List<Tuple> tuples = new ArrayList<Tuple>();
+		this.Schema = source.getSchema();
 		source.reset();
 		Tuple t;
 		while(true) {
@@ -64,17 +65,17 @@ public class Sorter extends Operator{
 			writer.write(String.join(" ", tuple.get())+"\n");
 		}
 		writer.close();
-		this.reader = new PlainReader(path, source.getSchema());
+		this.source = new PlainReader(path, source.getSchema());
 		//dump tuples into original file
 	}
 	
 	
 	public Tuple getNextTuple() throws IOException{
-		return this.reader.getNextTuple();
+		return this.source.getNextTuple();
 	}
 
 	
-	public void reset() throws FileNotFoundException {
-		this.reader.reset();
+	public void reset() throws IOException {
+		this.source.reset();
 	}
 }

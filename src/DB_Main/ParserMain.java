@@ -2,6 +2,7 @@ package DB_Main;
 import Operators.*;
 import java.util.List;
 
+import Var.SchemaTable;
 import Var.Tuple;
 
 import java.io.FileReader;
@@ -43,11 +44,11 @@ public class ParserMain {
 				List<OrderByElement> orderbyList = plain.getOrderByElements();
 				Schema = schematable.getSchema(firstItem);
 				path = schematable.getPath(firstItem);
-				PlainReader reader = new PlainReader(path, Schema);
+				Operator Cur = new PlainReader(path, Schema);
 				if(joinList == null) {	
-					Selector selector = new Selector(reader, where_clause, selectitems);
+					Cur = new Selector(Cur, where_clause, selectitems);
 				}
-				else if(joinList.size() == 1) {
+				else {
 					Join joinItem = joinList.get(0);
 					String secondItem = joinItem.getRightItem().toString();
 					Schema2 = schematable.getSchema(secondItem);
@@ -58,12 +59,14 @@ public class ParserMain {
 						JoinType = 1;
 					else if(joinItem.isRight())
 						JoinType = 2;
-					System.out.println(JoinType);
-					BasicJoiner joiner = new BasicJoiner(reader, reader2, where_clause, JoinType, selectitems);	
-					
+					Cur = new BasicJoiner(Cur, reader2, where_clause, JoinType, selectitems);
+					Cur = Cur.Dump("db/tempTable2");
 				}
 				if(orderbyList != null) {
-					Sorter sorter = new Sorter(reader, orderbyList, tempPath);
+					Cur = new Sorter(Cur, orderbyList, tempPath);
+				}
+				if(distinct != null) {
+					Cur = new Distinctor(Cur,distinct);
 				}
 			}
 		} catch (Exception e) {

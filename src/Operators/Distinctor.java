@@ -16,13 +16,21 @@ public class Distinctor extends Operator{
 		this.source = source;
 		this.Schema = source.getSchema();
 		this.onItems = distinct.getOnSelectItems();
-		ItemPos = new int[onItems.size()];
-		for(int i = 0; i < ItemPos.length; i++) {
-			for(int j = 1; j < Schema.size(); j++) {
-				if(onItems.get(i).toString().equals(Schema.get(j))) {
-					ItemPos[i] = j - 1;
-					break;
-				}		
+		if(onItems != null) {
+			ItemPos = new int[onItems.size()];
+			for(int i = 0; i < ItemPos.length; i++) {
+				for(int j = 1; j < Schema.size(); j++) {
+					if(onItems.get(i).toString().equals(Schema.get(j))) {
+						ItemPos[i] = j - 1;
+						break;
+					}		
+				}
+			}
+		}
+		else {
+			ItemPos = new int[this.Schema.size()-1];
+			for(int i = 0; i < ItemPos.length; i++) {
+				ItemPos[i] = i;
 			}
 		}
 		try {
@@ -59,7 +67,7 @@ public class Distinctor extends Operator{
 		}
 		throw new IOException();
 	}
-	public void reset() throws FileNotFoundException {
+	public void reset() throws IOException {
 		this.source.reset();
 	}
 

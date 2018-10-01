@@ -22,7 +22,7 @@ public class BasicJoiner extends Operator{
 	boolean matched = false;
 	int[][] ItemPos;
 	JoinExpressionVisitor visitor;
-	private Tuple Dump(Tuple tuple1, Tuple tuple2) {
+	private Tuple subDump(Tuple tuple1, Tuple tuple2) {
 		List<String> content = new ArrayList<String>();
 		for(int i = 0; i < ItemPos.length; i++) {
 			if(ItemPos[i][0] == 1)
@@ -43,10 +43,11 @@ public class BasicJoiner extends Operator{
 			for (int i = 0; i < selectitems.size(); i++) {
 				Item = selectitems.get(i).toString().split("\\.");
 				if(Item.length > 2) {
-					String column_name = Item[1] + '.' + Item[2];
+					String column_name = Item[1] + "." + Item[2];
 					this.Schema.add(column_name);
 				}
 				else if(Item.length > 1){
+					Schema.add(Item[0] + "." + Item[1]);
 					if(Item[0].equals(this.Schema1.get(0))) {
 						String column_name = Item[1];
 						for (int j = 1; j < this.Schema1.size(); j++) {
@@ -56,7 +57,7 @@ public class BasicJoiner extends Operator{
 							}
 						}
 					}
-					else if(Item[0].equals(this.Schema1.get(0))){
+					else if(Item[0].equals(this.Schema2.get(0))){
 						String column_name = Item[1];
 						for (int j = 1; j < this.Schema2.size(); j++) {
 							if (this.Schema2.get(j).equals(column_name)) {
@@ -84,13 +85,13 @@ public class BasicJoiner extends Operator{
 				else {
 					String column_name = Item[0];
 					for (int j = 1; j < this.Schema1.size(); j++) {
-						if (this.Schema1.get(j).equals(column_name)) {
+						if (this.Schema1.get(j).equals(column_name) | this.Schema1.get(j).split("\\.")[1].equals(column_name)) {
 							this.ItemPos[i][0] = 1;
 							this.ItemPos[i][1] = j - 1;
 						}
 					}
 					for (int j = 1; j < this.Schema2.size(); j++) {
-						if (this.Schema2.get(j).equals(column_name)) {
+						if (this.Schema2.get(j).equals(column_name) | this.Schema2.get(j).split("\\.")[1].equals(column_name)) {
 							this.ItemPos[i][0] = 2;
 							this.ItemPos[i][1] = j - 1;
 						}
@@ -125,7 +126,6 @@ public class BasicJoiner extends Operator{
 					this.ItemPos[i-1+offset][1] = i - 1;
 					this.Schema.add(this.Schema2.get(i));
 				}
-			//Initialize ItemPos
 		}
 		//0: INNER
 		//1: LEFT
@@ -144,7 +144,7 @@ public class BasicJoiner extends Operator{
 		this.Join_Type = Join_Type;
 		
 		try {
-			this.tuple1 = source1.getNextTuple();
+			this.tuple1 = this.source1.getNextTuple();
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -155,8 +155,10 @@ public class BasicJoiner extends Operator{
 		}
 		this.Nulltuple = new Tuple(Arrays.asList(nulltuple));
 
-		System.out.println(source1.getSchema());
-		System.out.println(source2.getSchema());
+		//System.out.println(source1.getSchema());
+		//System.out.println(source2.getSchema());
+		//System.out.println(this.Schema);
+		
 	}
 	
 	
@@ -168,24 +170,21 @@ public class BasicJoiner extends Operator{
 	public Tuple getNextTuple() throws IOException{
 		Tuple result = new Tuple(Arrays.asList(new String[0]));
 		while(true) {
-			if(tuple1.size() == 0) {
-				break;
-			}
 			Tuple tuple2 = new Tuple(Arrays.asList(new String[0]));
 			try {
 				tuple2 = this.source2.getNextTuple();
-				System.out.println(tuple1.get());
-				System.out.println(tuple2.get());
+				//System.out.println(tuple1.get());
+				//System.out.println(tuple2.get());
 				//On conditions go here!
 				visitor.set(tuple1, tuple2);
 				on_clause.accept(visitor);
 				if(visitor.getStatus()) {
 					this.matched = true;
 					if(Join_Type != 2) {
-						result = Dump(tuple1, tuple2);
+						result = subDump(tuple1, tuple2);
 					}
 					else {
-						result = Dump(tuple2, tuple1);
+						result = subDump(tuple2, tuple1);
 					}
 					return result;
 				}
@@ -193,27 +192,34 @@ public class BasicJoiner extends Operator{
 			catch(Exception e2) {
 				try {
 					if(this.matched == false) {
+						this.matched = true;
 						if(Join_Type == 1) {
-							result = Dump(tuple1, tuple2);
+							return subDump(tuple1, Nulltuple);
 						}
 						else if(Join_Type == 2) {
-							result = Dump(tuple2, tuple1);
+							return subDump(Nulltuple, tuple1);
 						}
 					}
-					this.source2.reset();
 					this.tuple1 = this.source1.getNextTuple();
+					this.source2.reset();
 					this.matched = false;
 				}
-				catch(Exception e1) {
+				catch(IOException e1) {
 					break;
 				}
 			}	
 		}
 		throw new IOException();
 	}
-	public void reset() throws FileNotFoundException {
+	public void reset() throws IOException {
 		this.source1.reset();
 		this.source2.reset();
+		try {
+			this.tuple1 = this.source1.getNextTuple();
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 	}
 	
 
