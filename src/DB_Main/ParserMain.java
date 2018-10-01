@@ -19,6 +19,7 @@ import net.sf.jsqlparser.statement.select.OrderByElement;
 
 public class ParserMain {
 	private static final String queriesFile = "queries.sql";
+	private static final String tempPath = "db/tempTable";
 	public static void main(String[] args) {
 		List<String> Schema;
 		List<String> Schema2;
@@ -45,8 +46,6 @@ public class ParserMain {
 				PlainReader reader = new PlainReader(path, Schema);
 				if(joinList == null) {	
 					Selector selector = new Selector(reader, where_clause, selectitems);
-					t = selector.getNextTuple();
-					System.out.println(t.get());
 				}
 				else if(joinList.size() == 1) {
 					Join joinItem = joinList.get(0);
@@ -60,9 +59,11 @@ public class ParserMain {
 					else if(joinItem.isRight())
 						JoinType = 2;
 					System.out.println(JoinType);
-					BasicJoiner joiner = new BasicJoiner(reader, reader2, where_clause, JoinType, selectitems);
-					t = joiner.getNextTuple();
-					System.out.println(t.get());
+					BasicJoiner joiner = new BasicJoiner(reader, reader2, where_clause, JoinType, selectitems);	
+					
+				}
+				if(orderbyList != null) {
+					Sorter sorter = new Sorter(reader, orderbyList, tempPath);
 				}
 			}
 		} catch (Exception e) {

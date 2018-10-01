@@ -47,7 +47,7 @@ public class Selector extends Operator{
 
 	public Tuple getNextTuple() throws IOException{
 		Tuple result = new Tuple(Arrays.asList(new String[0]));
-		while(true) {
+		while(true) {		
 			try {
 				Tuple tuple = source.getNextTuple();
 				if(tuple.size() == 0) {
@@ -64,9 +64,11 @@ public class Selector extends Operator{
 				}
 			}
 			catch(Exception e) {
+				
 				break;
 			}
 		}
+		
 		throw new IOException();
 	}
 	public void reset() throws FileNotFoundException {
