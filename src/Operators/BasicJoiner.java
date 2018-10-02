@@ -39,6 +39,8 @@ public class BasicJoiner extends Operator{
 		String[] Item;		
 		this.Schema1 = source1.getSchema();
 		this.Schema2 = source2.getSchema();
+		System.out.println(Schema1);
+		System.out.println(Schema2);
 		if (selectitems.get(0).toString() != "*") {
 			this.ItemPos = new int[selectitems.size()][2];
 			for (int i = 0; i < selectitems.size(); i++) {
@@ -242,7 +244,7 @@ public class BasicJoiner extends Operator{
 		try {
 			FileWriter writer = new FileWriter(path);
 			for(Tuple tuple: tuples) {
-				writer.write(String.join(" ", tuple.get())+"\n");
+				writer.write(String.join(",", tuple.get())+"\n");
 			}
 			writer.close();
 		}

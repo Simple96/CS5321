@@ -25,7 +25,7 @@ public class Sorter extends Operator{
 	    			}
 	    		}	    			
 	    	}
-	    	System.out.println(compare_order[0]);
+	    	//System.out.println(compare_order.length);
 	    }
 	    public int compare(Tuple a, Tuple b) {
 	    	for(int i = 0; i < compare_order.length; i++) {
@@ -62,7 +62,7 @@ public class Sorter extends Operator{
 		FileWriter writer = new FileWriter(path);
 		for(Tuple tuple: tuples) {
 			//System.out.println(String.join(" ", tuple.get()));
-			writer.write(String.join(" ", tuple.get())+"\n");
+			writer.write(String.join(",", tuple.get())+"\n");
 		}
 		writer.close();
 		this.source = new PlainReader(path, source.getSchema());

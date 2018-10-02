@@ -10,7 +10,7 @@ import Var.Tuple;
 public class PlainReader extends Operator {
 	BufferedReader reader;
 	String path;
-	public PlainReader(String path, List<String> Schema) {
+	public PlainReader(String path, List<String> Schema, String Alias) {
 		this.path = path;
 		try {
 			this.reader = new BufferedReader(new FileReader(path));
@@ -19,8 +19,13 @@ public class PlainReader extends Operator {
 			e.printStackTrace();
 		}
 		this.Schema = Schema;
+		this.Schema.set(0, Alias);
 	}
 	
+	public PlainReader(String path, List<String> Schema) {
+		this(path, Schema, Schema.get(0));
+	}
+
 	
 	public Tuple getNextTuple() throws IOException{
 		return new Tuple(Arrays.asList(this.reader.readLine().split(",")));

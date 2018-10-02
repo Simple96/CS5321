@@ -92,7 +92,7 @@ public class Distinctor extends Operator{
 		try {
 			FileWriter writer = new FileWriter(path);
 			for(Tuple tuple: tuples) {
-				writer.write(String.join(" ", tuple.get())+"\n");
+				writer.write(String.join(",", tuple.get())+"\n");
 			}
 			writer.close();
 		}

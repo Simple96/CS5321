@@ -8,6 +8,7 @@ import Var.Tuple;
 import java.io.FileReader;
 import net.sf.jsqlparser.expression.Expression;
 import net.sf.jsqlparser.parser.CCJSqlParser;
+import net.sf.jsqlparser.schema.Table;
 import net.sf.jsqlparser.statement.Statement;
 import net.sf.jsqlparser.statement.select.Distinct;
 import net.sf.jsqlparser.statement.select.FromItem;
@@ -20,7 +21,6 @@ import net.sf.jsqlparser.statement.select.OrderByElement;
 
 public class ParserMain {
 	private static final String queriesFile = "queries.sql";
-	private static final String tempPath = "db/tempTable";
 	public static void main(String[] args) {
 		List<String> Schema;
 		List<String> Schema2;
@@ -37,33 +37,54 @@ public class ParserMain {
 				PlainSelect plain = (PlainSelect) select.getSelectBody();	
 				List<SelectItem> selectitems = plain.getSelectItems();
 				Distinct distinct = plain.getDistinct();
-				FromItem fromItem = plain.getFromItem();
+				Table fromItem = (Table) plain.getFromItem();
+				Table joinItem;
 				List<Join> joinList = plain.getJoins(); 
 				Expression where_clause = plain.getWhere();
-				String firstItem = fromItem.toString();
+				String firstItem;
+				String secondItem;
+				String Alias;
+				firstItem = fromItem.getName().toString();
 				List<OrderByElement> orderbyList = plain.getOrderByElements();
 				Schema = schematable.getSchema(firstItem);
 				path = schematable.getPath(firstItem);
-				Operator Cur = new PlainReader(path, Schema);
-				if(joinList == null) {	
-					Cur = new Selector(Cur, where_clause, selectitems);
+				Operator Cur;
+				
+				if(fromItem.getAlias() != null) {
+					Alias = fromItem.getAlias().toString();
+					Cur = new PlainReader(path, Schema, Alias);
 				}
+				else 
+					Cur = new PlainReader(path, Schema);
+				
+				if(joinList == null) 
+					Cur = new Selector(Cur, where_clause, selectitems);
+
 				else {
-					Join joinItem = joinList.get(0);
-					String secondItem = joinItem.getRightItem().toString();
+					joinItem = (Table) joinList.get(0).getRightItem();
+					boolean isLeft = joinList.get(0).isLeft();
+					boolean isRight = joinList.get(0).isRight();
+					secondItem = joinItem.getName().toString();
 					Schema2 = schematable.getSchema(secondItem);
 					path2 = schematable.getPath(secondItem);
-					PlainReader reader2 = new PlainReader(path2, Schema2);
 					int JoinType = 0;
-					if(joinItem.isLeft())
+					if(isLeft)
 						JoinType = 1;
-					else if(joinItem.isRight())
+					else if(isRight)
 						JoinType = 2;
-					Cur = new BasicJoiner(Cur, reader2, where_clause, JoinType, selectitems);
-					Cur = Cur.Dump("db/tempTable2");
+					if(joinItem.getAlias() != null) {
+						Alias = joinItem.getAlias().toString();
+						PlainReader reader2 = new PlainReader(path2, Schema2, Alias);
+						Cur = new BasicJoiner(Cur, reader2, where_clause, JoinType, selectitems);
+					}
+					else {
+						PlainReader reader2 = new PlainReader(path2, Schema2);
+						Cur = new BasicJoiner(Cur, reader2, where_clause, JoinType, selectitems);
+					}
+					Cur = Cur.Dump("db/tempTables/tempTable2");
 				}
 				if(orderbyList != null) {
-					Cur = new Sorter(Cur, orderbyList, tempPath);
+					Cur = new Sorter(Cur, orderbyList, "db/tempTables/tempTable1");
 				}
 				if(distinct != null) {
 					Cur = new Distinctor(Cur,distinct);
