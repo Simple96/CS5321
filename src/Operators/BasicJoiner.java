@@ -39,8 +39,6 @@ public class BasicJoiner extends Operator{
 		String[] Item;		
 		this.Schema1 = source1.getSchema();
 		this.Schema2 = source2.getSchema();
-		System.out.println(Schema1);
-		System.out.println(Schema2);
 		if (selectitems.get(0).toString() != "*") {
 			this.ItemPos = new int[selectitems.size()][2];
 			for (int i = 0; i < selectitems.size(); i++) {
@@ -157,7 +155,8 @@ public class BasicJoiner extends Operator{
 			nulltuple[i] = "null";
 		}
 		String path = "db/tempTable/"+Integer.toString(ThreadLocalRandom.current().nextInt(0, 99999));
-		this.source2 = this.source2.Dump(path);
+		if(!(source2 instanceof Sorter) & !(source2 instanceof PlainReader))
+			this.source2 = this.source2.Dump(path);
 		this.Nulltuple = new Tuple(Arrays.asList(nulltuple));
 
 		//System.out.println(source1.getSchema());
@@ -174,16 +173,21 @@ public class BasicJoiner extends Operator{
 	
 	public Tuple getNextTuple() throws IOException{
 		Tuple result = new Tuple(Arrays.asList(new String[0]));
+		boolean cond;
 		while(true) {
+			cond = true;
 			Tuple tuple2 = new Tuple(Arrays.asList(new String[0]));
 			try {
 				tuple2 = this.source2.getNextTuple();
 				//System.out.println(tuple1.get());
 				//System.out.println(tuple2.get());
 				//On conditions go here!
-				visitor.set(tuple1, tuple2);
-				on_clause.accept(visitor);
-				if(visitor.getStatus()) {
+				if(on_clause != null) {
+					visitor.set(tuple1, tuple2);
+					on_clause.accept(visitor);
+					cond = visitor.getStatus();
+				}
+				if(cond) {
 					this.matched = true;
 					if(Join_Type != 2) {
 						result = subDump(tuple1, tuple2);
@@ -227,31 +231,5 @@ public class BasicJoiner extends Operator{
 		}
 	}
 	
-	
-	public PlainReader Dump(String path) {
-		List<Tuple> tuples = new ArrayList<Tuple>();
-		Tuple t;
-		while(true) {
-			try {
-				t = this.getNextTuple();
-			}
-			catch(Exception e) {
-				//tuples.remove(tuples.size()-1);
-				break;
-			}
-			tuples.add(t);
-		}
-		try {
-			FileWriter writer = new FileWriter(path);
-			for(Tuple tuple: tuples) {
-				writer.write(String.join(",", tuple.get())+"\n");
-			}
-			writer.close();
-		}
-		catch(Exception e) {
-			
-		}
-		return new PlainReader(path, Schema);
-	}
 
 }

@@ -1,3 +1,6 @@
 sailors sid sname age
 boats bid bname color
 reserves sid bid date
+Sailors A B C
+Boats D E F
+Reserves G H

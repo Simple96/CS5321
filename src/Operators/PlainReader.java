@@ -2,7 +2,9 @@ package Operators;
 import java.io.BufferedReader;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
+import java.io.FileWriter;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
@@ -18,7 +20,7 @@ public class PlainReader extends Operator {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-		this.Schema = Schema;
+		this.Schema = new ArrayList<>(Schema);
 		this.Schema.set(0, Alias);
 	}
 	
@@ -36,7 +38,4 @@ public class PlainReader extends Operator {
 		this.reader = new BufferedReader(new FileReader(this.path));
 	}
 	
-	public PlainReader Dump(String path) {
-		return this;
-	}
 }

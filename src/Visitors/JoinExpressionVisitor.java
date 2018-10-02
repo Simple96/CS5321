@@ -39,7 +39,7 @@ public class JoinExpressionVisitor implements ExpressionVisitor {
     private Tuple tp1 = null, tp2 = null;
     private List<String> sche1, sche2;
     private long Num;
-    private boolean status;
+    private boolean status = true;
 
     Expression conjunct_expression;
 
@@ -96,15 +96,15 @@ public class JoinExpressionVisitor implements ExpressionVisitor {
             }
             else this.Num = Long.parseLong(tp2.get(index2));
         }
-        System.out.printf("visitor pattern exit, find value: ");
-        System.out.println(Num);
+        //System.out.printf("visitor pattern exit, find value: ");
+        //System.out.println(Num);
     }
 
     @Override
     public void visit(LongValue value_exit) {
         this.Num = value_exit.getValue();
-        System.out.printf("visitor pattern exit, find longValue: ");
-        System.out.println(this.Num);
+        //System.out.printf("visitor pattern exit, find longValue: ");
+        //System.out.println(this.Num);
     }
 
     @Override

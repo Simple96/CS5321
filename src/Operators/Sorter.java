@@ -13,18 +13,44 @@ public class Sorter extends Operator{
 	PlainReader reader;
 	private class ItemComparator implements Comparator<Tuple> {
 		int[] compare_order;
-		String s;
+		String[] s;
+		String sjoined;
 	    public ItemComparator(List<String> Schema, List<OrderByElement> orderbyItems){
 	    	compare_order = new int[orderbyItems.size()];
 	    	for(int i = 0; i < orderbyItems.size(); i++) {
-	    		s = orderbyItems.get(i).getExpression().toString();
+	    		sjoined = orderbyItems.get(i).getExpression().toString();
+	    		s = sjoined.split("\\.");
 	    		for(int j = 1; j < Schema.size(); j++) {
 	    			String[] sa = Schema.get(j).split("\\.");
-	    			if(s.equals(Schema.get(j)) | (sa.length > 1 & s.equals(sa[1].toString()))) {
+	    			
+	    			if(sjoined.equals(Schema.get(j))) {
 	    				compare_order[i] = j - 1;
 	    			}
-	    		}	    			
+	    			else if(sa.length > 1)
+	    				if(sjoined.equals(sa[1].toString()))
+	    					compare_order[i] = j - 1;
+	    		}
+	    		
+	    		if(s.length > 1) {
+		    		for(int j = 1; j < Schema.size(); j++) {
+		    			String[] sa = Schema.get(j).split("\\.");
+		    			
+		    			if(s[1].equals(Schema.get(j))) {
+		    				compare_order[i] = j - 1;
+		    			}
+		    			else if(sa.length > 1)
+		    				if(s[1].equals(sa[1].toString()))
+		    					compare_order[i] = j - 1;
+		    		}
+	    		}	 
+   			
 	    	}
+	    }
+	    public ItemComparator(List<String> Schema){
+	    	compare_order = new int[Schema.size() - 1];
+	    	for(int i = 0; i < compare_order.length; i++) 
+	    		compare_order[i] = i;
+    			
 	    	//System.out.println(compare_order.length);
 	    }
 	    public int compare(Tuple a, Tuple b) {
@@ -42,7 +68,7 @@ public class Sorter extends Operator{
 	
 	public Sorter(Operator source, List<OrderByElement> orderbyItems, String path) throws IOException {
 		List<Tuple> tuples = new ArrayList<Tuple>();
-		this.Schema = source.getSchema();
+		this.Schema = new ArrayList<>(source.getSchema());
 		source.reset();
 		Tuple t;
 		while(true) {
@@ -69,6 +95,35 @@ public class Sorter extends Operator{
 		//dump tuples into original file
 	}
 	
+	public Sorter(Operator source, String path) throws IOException {
+		List<Tuple> tuples = new ArrayList<Tuple>();
+		this.Schema = new ArrayList<>(source.getSchema());
+		source.reset();
+		Tuple t;
+		while(true) {
+			try {
+				t = source.getNextTuple();
+			}
+			catch(Exception e) {
+				//tuples.remove(tuples.size()-1);
+				break;
+			}
+			tuples.add(t);
+		}
+		
+		ItemComparator comparator = new ItemComparator(source.getSchema());
+		
+		Collections.sort(tuples, comparator);
+		FileWriter writer = new FileWriter(path);
+		for(Tuple tuple: tuples) {
+			//System.out.println(String.join(" ", tuple.get()));
+			writer.write(String.join(",", tuple.get())+"\n");
+		}
+		writer.close();
+		this.source = new PlainReader(path, source.getSchema());
+		//dump tuples into original file
+	}
+	
 	
 	public Tuple getNextTuple() throws IOException{
 		return this.source.getNextTuple();
@@ -79,8 +134,4 @@ public class Sorter extends Operator{
 		this.source.reset();
 	}
 	
-	
-	public PlainReader Dump(String path) {
-		return this.source;
-	}
 }

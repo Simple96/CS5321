@@ -1,5 +1,4 @@
 package Operators;
-import java.io.FileNotFoundException;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -50,15 +49,20 @@ public class Selector extends Operator{
 
 	public Tuple getNextTuple() throws IOException{
 		Tuple result = new Tuple(Arrays.asList(new String[0]));
-		while(true) {		
+		boolean cond;
+		while(true) {	
+			cond = true;
 			try {
 				Tuple tuple = source.getNextTuple();
 				if(tuple.size() == 0) {
 					break;
 				}
-				this.visitor.set(tuple);
-				where_clause.accept(visitor);
-				if(visitor.getStatus()) {
+				if(where_clause != null) {
+					this.visitor.set(tuple);
+					where_clause.accept(visitor);
+					cond = visitor.getStatus();
+				}
+				if(cond) {
 					result = new Tuple(Arrays.asList(new String[this.ItemPos.length]));
 					for(int i = 0; i < this.ItemPos.length; i++) {
 						result.set(i, tuple.get(ItemPos[i]));
@@ -80,29 +84,4 @@ public class Selector extends Operator{
 		this.source.reset();
 	}
 	
-	public PlainReader Dump(String path) {
-		List<Tuple> tuples = new ArrayList<Tuple>();
-		Tuple t;
-		while(true) {
-			try {
-				t = this.getNextTuple();
-			}
-			catch(Exception e) {
-				//tuples.remove(tuples.size()-1);
-				break;
-			}
-			tuples.add(t);
-		}
-		try {
-			FileWriter writer = new FileWriter(path);
-			for(Tuple tuple: tuples) {
-				writer.write(String.join(",", tuple.get())+"\n");
-			}
-			writer.close();
-		}
-		catch(Exception e) {
-			
-		}
-		return new PlainReader(path, Schema);
-	}
 }

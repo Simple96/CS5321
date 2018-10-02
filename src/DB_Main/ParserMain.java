@@ -49,17 +49,16 @@ public class ParserMain {
 				Schema = schematable.getSchema(firstItem);
 				path = schematable.getPath(firstItem);
 				Operator Cur;
-				
 				if(fromItem.getAlias() != null) {
 					Alias = fromItem.getAlias().toString();
 					Cur = new PlainReader(path, Schema, Alias);
 				}
-				else 
+				else {
 					Cur = new PlainReader(path, Schema);
-				
-				if(joinList == null) 
+				}
+				if(joinList == null) {
 					Cur = new Selector(Cur, where_clause, selectitems);
-
+				}
 				else {
 					joinItem = (Table) joinList.get(0).getRightItem();
 					boolean isLeft = joinList.get(0).isLeft();
@@ -81,14 +80,15 @@ public class ParserMain {
 						PlainReader reader2 = new PlainReader(path2, Schema2);
 						Cur = new BasicJoiner(Cur, reader2, where_clause, JoinType, selectitems);
 					}
-					Cur = Cur.Dump("db/tempTables/tempTable2");
+				}
+				if(distinct != null) {
+					Cur = new Sorter(Cur, "db/tempTables/tempTable1");
+					Cur = new Distinctor(Cur,distinct);
 				}
 				if(orderbyList != null) {
 					Cur = new Sorter(Cur, orderbyList, "db/tempTables/tempTable1");
 				}
-				if(distinct != null) {
-					Cur = new Distinctor(Cur,distinct);
-				}
+				Cur.Dump("result");
 			}
 		} catch (Exception e) {
 			System.err.println("Exception occurred during parsing");

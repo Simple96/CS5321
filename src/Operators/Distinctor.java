@@ -12,12 +12,11 @@ import java.util.List;
 public class Distinctor extends Operator{
 	Operator source;
 	Tuple curTuple;
-	List<SelectItem> onItems;
 	int[] ItemPos;
 	public Distinctor(Operator source, Distinct distinct) {
 		this.source = source;
 		this.Schema = source.getSchema();
-		this.onItems = distinct.getOnSelectItems();
+		List<SelectItem> onItems = distinct.getOnSelectItems();
 		if(onItems != null) {
 			ItemPos = new int[onItems.size()];
 			for(int i = 0; i < ItemPos.length; i++) {
@@ -35,14 +34,18 @@ public class Distinctor extends Operator{
 				ItemPos[i] = i;
 			}
 		}
-		try {
-			this.curTuple = this.source.getNextTuple();
-		}
-		catch(Exception e) {
-			System.out.println("Table is empty!");
-		}
+
 	}
 	public Tuple getNextTuple() throws IOException{
+		if(this.curTuple == null) {
+			try {
+				this.curTuple = this.source.getNextTuple();
+				return this.curTuple;
+			}
+			catch(Exception e) {
+				throw new IOException();
+			}
+		}
 		while(true) {
 			try {
 				Tuple nextTuple = this.source.getNextTuple();
@@ -51,8 +54,8 @@ public class Distinctor extends Operator{
 				}
 				if(this.curTuple.size() == nextTuple.size()) {
 					boolean flag = true;
-					for(int i = 0; i < onItems.size(); i++) {
-						if (curTuple.get(ItemPos[i]) != nextTuple.get(ItemPos[i])) {
+					for(int i = 0; i < ItemPos.length; i++) {
+						if (!curTuple.get(ItemPos[i]).equals(nextTuple.get(ItemPos[i]))) {
 							flag = false;
 							break;
 						}
@@ -75,31 +78,5 @@ public class Distinctor extends Operator{
 		this.source.reset();
 	}
 	
-	
-	public PlainReader Dump(String path) {
-		List<Tuple> tuples = new ArrayList<Tuple>();
-		Tuple t;
-		while(true) {
-			try {
-				t = this.getNextTuple();
-			}
-			catch(Exception e) {
-				//tuples.remove(tuples.size()-1);
-				break;
-			}
-			tuples.add(t);
-		}
-		try {
-			FileWriter writer = new FileWriter(path);
-			for(Tuple tuple: tuples) {
-				writer.write(String.join(",", tuple.get())+"\n");
-			}
-			writer.close();
-		}
-		catch(Exception e) {
-			
-		}
-		return new PlainReader(path, Schema);
-	}
 
 }

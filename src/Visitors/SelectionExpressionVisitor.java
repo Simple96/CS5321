@@ -21,7 +21,7 @@ import java.util.List;
 
 public class SelectionExpressionVisitor implements ExpressionVisitor {
     protected long Num = 0;
-    protected boolean status = false;
+    protected boolean status = true;
     //protected Tuple current_tuple= null;
     protected List<String> schema;
     protected Tuple tuple= null;
@@ -63,15 +63,15 @@ public class SelectionExpressionVisitor implements ExpressionVisitor {
         int index = schema.indexOf(col_name) - 1;
         if (index == -1) {System.out.print("Class SelectionExpressionVisitor: schema input wrong");}
         this.Num = Long.parseLong(tuple.get(index));
-        System.out.printf("visitor pattern exit, find Column Number: ");
-        System.out.println(this.Num);
+        //System.out.printf("visitor pattern exit, find Column Number: ");
+        //System.out.println(this.Num);
     }
 
     @Override
     public void visit(LongValue value_exit) {
         this.Num = value_exit.getValue();
-        System.out.printf("visitor pattern exit, find longValue: ");
-        System.out.println(this.Num);
+        //System.out.printf("visitor pattern exit, find longValue: ");
+        //System.out.println(this.Num);
     }
 
     @Override
