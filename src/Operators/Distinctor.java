@@ -2,8 +2,10 @@ package Operators;
 import Var.Tuple;
 import net.sf.jsqlparser.statement.select.Distinct;
 import net.sf.jsqlparser.statement.select.SelectItem;
-import java.io.FileNotFoundException;
+
+import java.io.FileWriter;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
 
 
@@ -67,8 +69,37 @@ public class Distinctor extends Operator{
 		}
 		throw new IOException();
 	}
+	
+	
 	public void reset() throws IOException {
 		this.source.reset();
+	}
+	
+	
+	public PlainReader Dump(String path) {
+		List<Tuple> tuples = new ArrayList<Tuple>();
+		Tuple t;
+		while(true) {
+			try {
+				t = this.getNextTuple();
+			}
+			catch(Exception e) {
+				//tuples.remove(tuples.size()-1);
+				break;
+			}
+			tuples.add(t);
+		}
+		try {
+			FileWriter writer = new FileWriter(path);
+			for(Tuple tuple: tuples) {
+				writer.write(String.join(" ", tuple.get())+"\n");
+			}
+			writer.close();
+		}
+		catch(Exception e) {
+			
+		}
+		return new PlainReader(path, Schema);
 	}
 
 }

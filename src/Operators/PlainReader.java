@@ -10,9 +10,14 @@ import Var.Tuple;
 public class PlainReader extends Operator {
 	BufferedReader reader;
 	String path;
-	public PlainReader(String path, List<String> Schema) throws IOException {
+	public PlainReader(String path, List<String> Schema) {
 		this.path = path;
-		this.reader = new BufferedReader(new FileReader(path));
+		try {
+			this.reader = new BufferedReader(new FileReader(path));
+		} catch (FileNotFoundException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 		this.Schema = Schema;
 	}
 	
@@ -24,5 +29,9 @@ public class PlainReader extends Operator {
 	
 	public void reset() throws FileNotFoundException {
 		this.reader = new BufferedReader(new FileReader(this.path));
+	}
+	
+	public PlainReader Dump(String path) {
+		return this;
 	}
 }

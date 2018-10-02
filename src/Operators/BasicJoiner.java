@@ -1,9 +1,10 @@
 package Operators;
-import java.io.FileNotFoundException;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.concurrent.ThreadLocalRandom;
 
 import Var.Tuple;
 import Visitors.JoinExpressionVisitor;
@@ -153,6 +154,8 @@ public class BasicJoiner extends Operator{
 		for(int i = 0;i < this.source2.getSchema().size();i++) {
 			nulltuple[i] = "null";
 		}
+		String path = "db/tempTable/"+Integer.toString(ThreadLocalRandom.current().nextInt(0, 99999));
+		this.source2 = this.source2.Dump(path);
 		this.Nulltuple = new Tuple(Arrays.asList(nulltuple));
 
 		//System.out.println(source1.getSchema());
@@ -222,5 +225,31 @@ public class BasicJoiner extends Operator{
 		}
 	}
 	
+	
+	public PlainReader Dump(String path) {
+		List<Tuple> tuples = new ArrayList<Tuple>();
+		Tuple t;
+		while(true) {
+			try {
+				t = this.getNextTuple();
+			}
+			catch(Exception e) {
+				//tuples.remove(tuples.size()-1);
+				break;
+			}
+			tuples.add(t);
+		}
+		try {
+			FileWriter writer = new FileWriter(path);
+			for(Tuple tuple: tuples) {
+				writer.write(String.join(" ", tuple.get())+"\n");
+			}
+			writer.close();
+		}
+		catch(Exception e) {
+			
+		}
+		return new PlainReader(path, Schema);
+	}
 
 }

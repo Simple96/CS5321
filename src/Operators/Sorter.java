@@ -9,7 +9,7 @@ import net.sf.jsqlparser.statement.select.OrderByElement;
 import Var.Tuple;
 
 public class Sorter extends Operator{
-	Operator source;
+	PlainReader source;
 	PlainReader reader;
 	private class ItemComparator implements Comparator<Tuple> {
 		int[] compare_order;
@@ -77,5 +77,10 @@ public class Sorter extends Operator{
 	
 	public void reset() throws IOException {
 		this.source.reset();
+	}
+	
+	
+	public PlainReader Dump(String path) {
+		return this.source;
 	}
 }
